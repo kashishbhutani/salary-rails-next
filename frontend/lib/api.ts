@@ -1,4 +1,4 @@
-import type { CountryInsights, DashboardInsights, EmployeeListResponse } from "./types";
+import type { CountryInsights, DashboardInsights, Employee, EmployeeListResponse } from "./types";
 
 async function getJson<T>(path: string): Promise<T> {
   const response = await fetch(path);
@@ -17,4 +17,53 @@ export function fetchDashboardInsights() {
 export function fetchCountryInsights(country: string, jobTitle: string) {
   const params = new URLSearchParams({ country, job_title: jobTitle });
   return getJson<CountryInsights>(`/api/insights/country?${params.toString()}`);
+}
+
+export type EmployeePayload = {
+  full_name: string;
+  email: string;
+  country: string;
+  job_title: string;
+  department: string;
+  salary: number;
+  currency: string;
+  employment_type: string;
+  manager_name?: string;
+  joining_date?: string;
+};
+
+function normalizeEmployeePayload(payload: EmployeePayload) {
+  const [firstName, ...lastNameParts] = payload.full_name.trim().split(/\s+/);
+  return {
+    employee: {
+      ...payload,
+      first_name: firstName,
+      last_name: lastNameParts.join(" ") || firstName
+    }
+  };
+}
+
+export async function createEmployee(payload: EmployeePayload) {
+  const response = await fetch("/api/employees", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(normalizeEmployeePayload(payload))
+  });
+  if (!response.ok) throw new Error("Could not create employee");
+  return response.json() as Promise<{ employee: Employee }>;
+}
+
+export async function updateEmployee(id: number, payload: EmployeePayload) {
+  const response = await fetch(`/api/employees/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(normalizeEmployeePayload(payload))
+  });
+  if (!response.ok) throw new Error("Could not update employee");
+  return response.json() as Promise<{ employee: Employee }>;
+}
+
+export async function deleteEmployee(id: number) {
+  const response = await fetch(`/api/employees/${id}`, { method: "DELETE" });
+  if (!response.ok) throw new Error("Could not delete employee");
 }

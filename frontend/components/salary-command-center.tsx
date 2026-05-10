@@ -1,10 +1,11 @@
 "use client";
 
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
-import { BarChart3, BriefcaseBusiness, Search, Users } from "lucide-react";
+import { BarChart3, BriefcaseBusiness, Pencil, Search, Trash2, Users } from "lucide-react";
 import { useMemo, useState } from "react";
-import { fetchCountryInsights, fetchDashboardInsights, fetchEmployees } from "@/lib/api";
+import { createEmployee, deleteEmployee, fetchCountryInsights, fetchDashboardInsights, fetchEmployees, updateEmployee, type EmployeePayload } from "@/lib/api";
 import { formatCompact, formatCurrency } from "@/lib/format";
+import type { Employee } from "@/lib/types";
 import { useEmployeeFilters } from "@/stores/employee-filters";
 
 const queryClient = new QueryClient();
@@ -34,8 +35,33 @@ function SalaryCommandCenterContent() {
     queryFn: () => fetchCountryInsights(country, jobTitle)
   });
 
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [showForm, setShowForm] = useState(false);
   const employeeRows = employees.data?.employees ?? [];
+
+  async function refreshEmployees() {
+    await Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["employees"] }),
+      queryClient.invalidateQueries({ queryKey: ["dashboard"] }),
+      queryClient.invalidateQueries({ queryKey: ["country-insights"] })
+    ]);
+  }
+
+  async function saveEmployee(payload: EmployeePayload) {
+    if (editingEmployee) {
+      await updateEmployee(editingEmployee.id, payload);
+    } else {
+      await createEmployee(payload);
+    }
+    setShowForm(false);
+    setEditingEmployee(null);
+    await refreshEmployees();
+  }
+
+  async function removeEmployee(employee: Employee) {
+    await deleteEmployee(employee.id);
+    await refreshEmployees();
+  }
 
   return (
     <main className="mx-auto max-w-[1440px] px-7 py-7 text-[#17211b]">
@@ -44,7 +70,7 @@ function SalaryCommandCenterContent() {
           <p className="text-sm font-bold uppercase text-[#607064]">HR salary operations</p>
           <h1 className="text-4xl font-extrabold tracking-normal">Salary Command Center</h1>
         </div>
-        <button className="rounded-lg bg-[#185a4d] px-4 py-3 font-bold text-white" onClick={() => setShowForm(true)}>
+        <button className="rounded-lg bg-[#185a4d] px-4 py-3 font-bold text-white" onClick={() => { setEditingEmployee(null); setShowForm(true); }}>
           Add employee
         </button>
       </header>
@@ -123,6 +149,7 @@ function SalaryCommandCenterContent() {
                   <th className="p-3">Country</th>
                   <th className="p-3">Department</th>
                   <th className="p-3">Salary</th>
+                  <th className="p-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -133,6 +160,14 @@ function SalaryCommandCenterContent() {
                     <td className="p-3">{employee.country}</td>
                     <td className="p-3">{employee.department}</td>
                     <td className="p-3">{formatCurrency(employee.salary, employee.currency)}</td>
+                    <td className="p-3 text-right">
+                      <button className="mr-2 rounded-lg bg-[#e4e8df] p-2 text-[#223027]" aria-label={`Edit ${employee.full_name}`} onClick={() => { setEditingEmployee(employee); setShowForm(true); }}>
+                        <Pencil size={16} />
+                      </button>
+                      <button className="rounded-lg bg-[#9a2f28] p-2 text-white" aria-label={`Delete ${employee.full_name}`} onClick={() => removeEmployee(employee)}>
+                        <Trash2 size={16} />
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -142,17 +177,80 @@ function SalaryCommandCenterContent() {
       </section>
 
       {showForm && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/40 p-6">
+        <div className="fixed inset-0 flex items-center justify-center bg-black/40 p-6" role="dialog" aria-modal="true" aria-label="Employee form">
           <div className="w-full max-w-xl rounded-lg bg-white p-6 shadow-xl">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-bold">Add employee</h2>
-              <button className="rounded-lg bg-[#e4e8df] px-3 py-2 font-bold text-[#223027]" onClick={() => setShowForm(false)}>Close</button>
+              <h2 className="text-xl font-bold">{editingEmployee ? "Edit employee" : "Add employee"}</h2>
+              <button className="rounded-lg bg-[#e4e8df] px-3 py-2 font-bold text-[#223027]" onClick={() => { setShowForm(false); setEditingEmployee(null); }}>Close</button>
             </div>
-            <p className="mt-4 text-[#657468]">CRUD API is wired; this modal is ready for the create/edit form fields.</p>
+            <EmployeeForm employee={editingEmployee} onSubmit={saveEmployee} />
           </div>
         </div>
       )}
     </main>
+  );
+}
+
+function EmployeeForm({ employee, onSubmit }: { employee: Employee | null; onSubmit: (payload: EmployeePayload) => Promise<void> }) {
+  const [form, setForm] = useState<EmployeePayload>({
+    full_name: employee?.full_name ?? "",
+    email: employee?.email ?? "",
+    country: employee?.country ?? "United States",
+    job_title: employee?.job_title ?? "Software Engineer",
+    department: employee?.department ?? "Engineering",
+    salary: employee?.salary ?? 100000,
+    currency: employee?.currency ?? "USD",
+    employment_type: employee?.employment_type ?? "full_time",
+    manager_name: employee?.manager_name ?? "",
+    joining_date: employee?.joining_date ?? "2024-01-15"
+  });
+
+  function update(field: keyof EmployeePayload, value: string | number) {
+    setForm((current) => ({ ...current, [field]: value }));
+  }
+
+  return (
+    <form className="mt-5 grid grid-cols-2 gap-4 max-sm:grid-cols-1" onSubmit={(event) => { event.preventDefault(); void onSubmit(form); }}>
+      <label className="grid gap-1 text-sm font-bold text-[#4d5d52]">
+        Full name
+        <input className="rounded-lg border border-[#cfd8c8] p-3" value={form.full_name} onChange={(event) => update("full_name", event.target.value)} required />
+      </label>
+      <label className="grid gap-1 text-sm font-bold text-[#4d5d52]">
+        Email
+        <input className="rounded-lg border border-[#cfd8c8] p-3" type="email" value={form.email} onChange={(event) => update("email", event.target.value)} required />
+      </label>
+      <label className="grid gap-1 text-sm font-bold text-[#4d5d52]">
+        Job title
+        <input className="rounded-lg border border-[#cfd8c8] p-3" value={form.job_title} onChange={(event) => update("job_title", event.target.value)} required />
+      </label>
+      <label className="grid gap-1 text-sm font-bold text-[#4d5d52]">
+        Department
+        <input className="rounded-lg border border-[#cfd8c8] p-3" value={form.department} onChange={(event) => update("department", event.target.value)} required />
+      </label>
+      <label className="grid gap-1 text-sm font-bold text-[#4d5d52]">
+        Country
+        <input className="rounded-lg border border-[#cfd8c8] p-3" value={form.country} onChange={(event) => update("country", event.target.value)} required />
+      </label>
+      <label className="grid gap-1 text-sm font-bold text-[#4d5d52]">
+        Salary
+        <input className="rounded-lg border border-[#cfd8c8] p-3" type="number" value={form.salary} onChange={(event) => update("salary", Number(event.target.value))} required />
+      </label>
+      <label className="grid gap-1 text-sm font-bold text-[#4d5d52]">
+        Currency
+        <input className="rounded-lg border border-[#cfd8c8] p-3" value={form.currency} onChange={(event) => update("currency", event.target.value)} required />
+      </label>
+      <label className="grid gap-1 text-sm font-bold text-[#4d5d52]">
+        Employment type
+        <select className="rounded-lg border border-[#cfd8c8] p-3" value={form.employment_type} onChange={(event) => update("employment_type", event.target.value)}>
+          <option value="full_time">Full time</option>
+          <option value="part_time">Part time</option>
+          <option value="contract">Contract</option>
+        </select>
+      </label>
+      <button className="col-span-2 rounded-lg bg-[#185a4d] px-4 py-3 font-bold text-white max-sm:col-span-1" type="submit">
+        Save employee
+      </button>
+    </form>
   );
 }
 
