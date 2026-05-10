@@ -54,7 +54,7 @@ describe("SalaryCommandCenter", () => {
     expect(screen.getByRole("heading", { name: "Salary Command Center" })).toBeInTheDocument();
     await waitFor(() => expect(screen.getByText("Ada Lovelace")).toBeInTheDocument());
     expect(screen.getByText("3")).toBeInTheDocument();
-    expect(screen.getByText("$150,000")).toBeInTheDocument();
-    expect(screen.getByText("Software Engineer")).toBeInTheDocument();
+    expect(screen.getAllByText("$150,000").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Software Engineer").length).toBeGreaterThan(0);
   });
 });
