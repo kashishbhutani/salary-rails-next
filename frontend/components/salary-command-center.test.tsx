@@ -68,4 +68,36 @@ describe("SalaryCommandCenter", () => {
     expect(screen.getByLabelText("Salary")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Save employee" })).toBeInTheDocument();
   });
+
+  it("shows API validation errors inside the employee form", async () => {
+    vi.mocked(fetch).mockImplementationOnce(async () => Response.json({
+      employees: [],
+      meta: { total_count: 0, limit: 25, offset: 0 }
+    })).mockImplementationOnce(async () => Response.json({
+      total_employees: 0,
+      average_salary: 0,
+      top_paid_roles: [],
+      employee_count_by_country: [],
+      department_insights: []
+    })).mockImplementationOnce(async () => Response.json({
+      country: "United States",
+      employee_count: 0,
+      minimum_salary: 0,
+      maximum_salary: 0,
+      average_salary: 0,
+      salary_bands: { low: 0, medium: 0, high: 0 },
+      job_title_average: null
+    })).mockImplementationOnce(async () => Response.json(
+      { error: ["Email has already been taken"] },
+      { status: 422 }
+    ));
+
+    render(<SalaryCommandCenter />);
+    fireEvent.click(screen.getByRole("button", { name: "Add employee" }));
+    fireEvent.change(screen.getByLabelText("Full name"), { target: { value: "Ada Lovelace" } });
+    fireEvent.change(screen.getByLabelText("Email"), { target: { value: "ada@example.com" } });
+    fireEvent.click(screen.getByRole("button", { name: "Save employee" }));
+
+    expect(await screen.findByText("Email has already been taken")).toBeInTheDocument();
+  });
 });

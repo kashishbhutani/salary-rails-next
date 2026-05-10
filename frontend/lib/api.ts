@@ -2,7 +2,7 @@ import type { CountryInsights, DashboardInsights, Employee, EmployeeListResponse
 
 async function getJson<T>(path: string): Promise<T> {
   const response = await fetch(path);
-  if (!response.ok) throw new Error(`Request failed: ${response.status}`);
+  if (!response.ok) throw new Error(await errorMessage(response, `Request failed: ${response.status}`));
   return response.json();
 }
 
@@ -49,7 +49,7 @@ export async function createEmployee(payload: EmployeePayload) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(normalizeEmployeePayload(payload))
   });
-  if (!response.ok) throw new Error("Could not create employee");
+  if (!response.ok) throw new Error(await errorMessage(response, "Could not create employee"));
   return response.json() as Promise<{ employee: Employee }>;
 }
 
@@ -59,11 +59,19 @@ export async function updateEmployee(id: number, payload: EmployeePayload) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(normalizeEmployeePayload(payload))
   });
-  if (!response.ok) throw new Error("Could not update employee");
+  if (!response.ok) throw new Error(await errorMessage(response, "Could not update employee"));
   return response.json() as Promise<{ employee: Employee }>;
 }
 
 export async function deleteEmployee(id: number) {
   const response = await fetch(`/api/employees/${id}`, { method: "DELETE" });
-  if (!response.ok) throw new Error("Could not delete employee");
+  if (!response.ok) throw new Error(await errorMessage(response, "Could not delete employee"));
+}
+
+async function errorMessage(response: Response, fallback: string) {
+  const payload = await response.json().catch(() => null);
+  if (Array.isArray(payload?.error)) return payload.error.join(", ");
+  if (typeof payload?.error === "string") return payload.error;
+  if (typeof payload?.message === "string") return payload.message;
+  return fallback;
 }
