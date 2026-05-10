@@ -35,3 +35,4 @@ Open `http://localhost:3000`.
 - [Architecture](docs/ARCHITECTURE.md)
 - [AI Usage](docs/AI_USAGE.md)
 - [Tradeoffs](docs/TRADEOFFS.md)
+- [Readiness](docs/READINESS.md)
