@@ -1,9 +1,14 @@
-# This file should ensure the existence of records required to run the application in every environment (production,
-# development, test). The code here should be idempotent so that it can be executed at any point in every environment.
-# The data can then be loaded with the bin/rails db:seed command (or created alongside the database with db:setup).
-#
-# Example:
-#
-#   ["Action", "Comedy", "Drama", "Horror"].each do |genre_name|
-#     MovieGenre.find_or_create_by!(name: genre_name)
-#   end
+first_names = Rails.root.join("db/first_names.txt").read.split
+last_names = Rails.root.join("db/last_names.txt").read.split
+count = ENV.fetch("SEED_COUNT", 10_000).to_i
+
+started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+
+Employee.delete_all
+EmployeeSeedBuilder
+  .new(first_names:, last_names:, count:)
+  .rows
+  .each_slice(1_000) { |batch| Employee.insert_all!(batch) }
+
+elapsed_ms = ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at) * 1000).round
+puts "Seeded #{count} employees in #{elapsed_ms}ms"
