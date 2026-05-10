@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import SalaryCommandCenter from "./salary-command-center";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -56,5 +56,16 @@ describe("SalaryCommandCenter", () => {
     expect(screen.getByText("3")).toBeInTheDocument();
     expect(screen.getAllByText("$150,000").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Software Engineer").length).toBeGreaterThan(0);
+  });
+
+  it("opens an employee form from the management UI", async () => {
+    render(<SalaryCommandCenter />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Add employee" }));
+
+    expect(await screen.findByRole("dialog", { name: "Employee form" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Full name")).toBeInTheDocument();
+    expect(screen.getByLabelText("Salary")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Save employee" })).toBeInTheDocument();
   });
 });
