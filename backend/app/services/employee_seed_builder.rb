@@ -1,14 +1,5 @@
 class EmployeeSeedBuilder
-  COUNTRIES = [
-    ["United States", "USD"],
-    ["India", "INR"],
-    ["United Kingdom", "GBP"],
-    ["Germany", "EUR"],
-    ["Canada", "CAD"],
-    ["Australia", "AUD"],
-    ["Singapore", "SGD"],
-    ["Brazil", "BRL"]
-  ].freeze
+  COUNTRIES = Employee::COUNTRY_CURRENCIES.to_a.freeze
 
   ROLES = [
     ["Software Engineer", "Engineering", 118_000],

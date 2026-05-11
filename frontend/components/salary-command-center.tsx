@@ -10,8 +10,23 @@ import { useEmployeeFilters } from "@/stores/employee-filters";
 
 const queryClient = new QueryClient();
 
-const countries = ["United States", "India", "United Kingdom", "Germany", "Canada", "Australia", "Singapore", "Brazil"];
+const countryCurrencyOptions = [
+  { country: "United States", currency: "USD" },
+  { country: "India", currency: "INR" },
+  { country: "United Kingdom", currency: "GBP" },
+  { country: "Germany", currency: "EUR" },
+  { country: "Canada", currency: "CAD" },
+  { country: "Australia", currency: "AUD" },
+  { country: "Singapore", currency: "SGD" },
+  { country: "Brazil", currency: "BRL" }
+];
+const countries = countryCurrencyOptions.map((option) => option.country);
+const currencies = countryCurrencyOptions.map((option) => option.currency);
 const jobTitles = ["Software Engineer", "Senior Software Engineer", "Product Manager", "HR Business Partner", "Payroll Specialist", "Sales Manager", "Customer Success Manager", "Data Analyst", "Security Engineer", "Operations Lead"];
+
+function currencyForCountry(country: string) {
+  return countryCurrencyOptions.find((option) => option.country === country)?.currency ?? "USD";
+}
 
 function StatCard({ label, value, detail }: { label: string; value: string; detail: string }) {
   return (
@@ -216,7 +231,7 @@ function EmployeeForm({ employee, onSubmit }: { employee: Employee | null; onSub
     job_title: employee?.job_title ?? "Software Engineer",
     department: employee?.department ?? "Engineering",
     salary: employee?.salary ?? 100000,
-    currency: employee?.currency ?? "USD",
+    currency: employee?.currency ?? currencyForCountry(employee?.country ?? "United States"),
     employment_type: employee?.employment_type ?? "full_time",
     manager_name: employee?.manager_name ?? "",
     joining_date: employee?.joining_date ?? "2024-01-15"
@@ -224,6 +239,10 @@ function EmployeeForm({ employee, onSubmit }: { employee: Employee | null; onSub
 
   function update(field: keyof EmployeePayload, value: string | number) {
     setForm((current) => ({ ...current, [field]: value }));
+  }
+
+  function updateCountry(country: string) {
+    setForm((current) => ({ ...current, country, currency: currencyForCountry(country) }));
   }
 
   return (
@@ -265,7 +284,9 @@ function EmployeeForm({ employee, onSubmit }: { employee: Employee | null; onSub
       </label>
       <label className="grid gap-1.5 text-sm font-extrabold text-[#4d5d52]">
         Country
-        <input className="min-h-10 rounded-lg border border-[#cfd8c8] bg-[#fbfcfa] px-3 py-2 text-[#17211b]" value={form.country} onChange={(event) => update("country", event.target.value)} required />
+        <select className="min-h-10 rounded-lg border border-[#cfd8c8] bg-[#fbfcfa] px-3 py-2 text-[#17211b]" value={form.country} onChange={(event) => updateCountry(event.target.value)} required>
+          {countryCurrencyOptions.map((option) => <option key={option.country} value={option.country}>{option.country}</option>)}
+        </select>
       </label>
       <label className="grid gap-1.5 text-sm font-extrabold text-[#4d5d52]">
         Salary
@@ -273,7 +294,9 @@ function EmployeeForm({ employee, onSubmit }: { employee: Employee | null; onSub
       </label>
       <label className="grid gap-1.5 text-sm font-extrabold text-[#4d5d52]">
         Currency
-        <input className="min-h-10 rounded-lg border border-[#cfd8c8] bg-[#fbfcfa] px-3 py-2 text-[#17211b]" value={form.currency} onChange={(event) => update("currency", event.target.value)} required />
+        <select className="min-h-10 rounded-lg border border-[#cfd8c8] bg-[#fbfcfa] px-3 py-2 text-[#17211b]" value={form.currency} onChange={(event) => update("currency", event.target.value)} required>
+          {currencies.map((currency) => <option key={currency} value={currency}>{currency}</option>)}
+        </select>
       </label>
       <label className="grid gap-1.5 text-sm font-extrabold text-[#4d5d52]">
         Employment type
