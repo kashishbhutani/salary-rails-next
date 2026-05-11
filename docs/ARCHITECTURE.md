@@ -21,7 +21,6 @@ Rails API mode exposes REST endpoints:
 - `DELETE /employees/:id`
 - `GET /insights/dashboard`
 - `GET /insights/country`
-- `GET /insights/job_title`
 
 Core backend structure:
 
@@ -40,6 +39,7 @@ PostgreSQL stores employee records. The app adds indexes for the expected read p
 - `department`
 
 Salary insights are computed with aggregation queries so the database does the heavy lifting.
+The country insight endpoint accepts an optional `job_title` query parameter so the HR manager can answer "average salary for this role in this country" without introducing another endpoint for the same bounded report.
 
 ## Frontend
 

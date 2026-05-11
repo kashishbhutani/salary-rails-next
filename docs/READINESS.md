@@ -10,7 +10,7 @@
 ## Latest Local Results
 
 - RSpec: 18 examples, 0 failures
-- Vitest: 1 file, 2 tests, 0 failures
+- Vitest: 1 file, 3 tests, 0 failures
 - Next build: successful
 - Seed: 10,000 employees in 1,355ms using `insert_all` batches
 
