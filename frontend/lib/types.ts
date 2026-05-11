@@ -33,6 +33,7 @@ export type DashboardInsights = {
 
 export type CountryInsights = {
   country: string;
+  currency: string;
   employee_count: number;
   minimum_salary: number;
   maximum_salary: number;

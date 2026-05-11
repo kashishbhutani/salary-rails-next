@@ -11,6 +11,7 @@ module SalaryInsights
 
       {
         country:,
+        currency: Employee::COUNTRY_CURRENCIES[country],
         employee_count: scoped.count,
         minimum_salary: scoped.minimum(:salary).to_i,
         maximum_salary: scoped.maximum(:salary).to_i,

@@ -57,6 +57,7 @@ function SalaryCommandCenterContent() {
   });
 
   const employeeRows = employees.data?.employees ?? [];
+  const countryCurrency = countryInsights.data?.currency ?? currencyForCountry(country);
 
   async function refreshEmployees() {
     await Promise.all([
@@ -125,9 +126,9 @@ function SalaryCommandCenterContent() {
 
           {countryInsights.data && (
             <div className="border-t border-[#e7ece3]">
-              <Metric label="Minimum" value={formatCurrency(countryInsights.data.minimum_salary)} />
-              <Metric label="Maximum" value={formatCurrency(countryInsights.data.maximum_salary)} />
-              <Metric label="Average" value={formatCurrency(countryInsights.data.average_salary)} />
+              <Metric label="Minimum" value={formatCurrency(countryInsights.data.minimum_salary, countryCurrency)} />
+              <Metric label="Maximum" value={formatCurrency(countryInsights.data.maximum_salary, countryCurrency)} />
+              <Metric label="Average" value={formatCurrency(countryInsights.data.average_salary, countryCurrency)} />
               <Metric label="Low band" value={String(countryInsights.data.salary_bands.low)} />
               <Metric label="High band" value={String(countryInsights.data.salary_bands.high)} />
             </div>
@@ -138,7 +139,7 @@ function SalaryCommandCenterContent() {
               <BriefcaseBusiness size={18} aria-hidden />
               <div>
                 <span className="block text-sm text-[#657468]">{jobTitle}</span>
-                <strong className="text-xl">{formatCurrency(countryInsights.data.job_title_average)}</strong>
+                <strong className="text-xl">{formatCurrency(countryInsights.data.job_title_average, countryCurrency)}</strong>
               </div>
             </div>
           )}
