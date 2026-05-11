@@ -20,6 +20,7 @@ RSpec.describe "Insights API", type: :request do
     expect(response).to have_http_status(:ok)
     expect(json_body).to include(
       country: "United States",
+      currency: "USD",
       employee_count: 2,
       job_title_average: 150_000
     )

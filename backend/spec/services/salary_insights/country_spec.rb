@@ -13,6 +13,7 @@ RSpec.describe SalaryInsights::Country do
 
     expect(result).to include(
       country: "United States",
+      currency: "USD",
       employee_count: 3,
       minimum_salary: 100_000,
       maximum_salary: 200_000,

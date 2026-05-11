@@ -17,8 +17,12 @@ beforeEach(() => {
     }
 
     if (path.includes("/insights/country")) {
+      const country = new URL(path, "http://localhost").searchParams.get("country") ?? "United States";
+      const currency = country === "India" ? "INR" : "USD";
+
       return Response.json({
-        country: "United States",
+        country,
+        currency,
         employee_count: 2,
         minimum_salary: 100000,
         maximum_salary: 200000,
@@ -56,6 +60,16 @@ describe("SalaryCommandCenter", () => {
     expect(screen.getByText("3")).toBeInTheDocument();
     expect(screen.getAllByText("$150,000").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Software Engineer").length).toBeGreaterThan(0);
+  });
+
+  it("formats country insights with the selected country's currency", async () => {
+    render(<SalaryCommandCenter />);
+
+    await waitFor(() => expect(screen.getByText("Ada Lovelace")).toBeInTheDocument());
+
+    fireEvent.change(screen.getByRole("combobox", { name: "Country" }), { target: { value: "India" } });
+
+    expect(await screen.findAllByText("₹150,000")).not.toHaveLength(0);
   });
 
   it("opens an employee form from the management UI", async () => {
@@ -97,6 +111,7 @@ describe("SalaryCommandCenter", () => {
       department_insights: []
     })).mockImplementationOnce(async () => Response.json({
       country: "United States",
+      currency: "USD",
       employee_count: 0,
       minimum_salary: 0,
       maximum_salary: 0,
