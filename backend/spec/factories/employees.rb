@@ -8,7 +8,7 @@ FactoryBot.define do
     job_title { "Software Engineer" }
     department { "Engineering" }
     salary { 140_000 }
-    currency { "USD" }
+    currency { Employee::COUNTRY_CURRENCIES.fetch(country, "USD") }
     employment_type { "full_time" }
     manager_name { "Grace Hopper" }
     joining_date { Date.new(2021, 4, 12) }
