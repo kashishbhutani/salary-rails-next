@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import SalaryCommandCenter from "./salary-command-center";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -67,6 +67,22 @@ describe("SalaryCommandCenter", () => {
     expect(screen.getByLabelText("Full name")).toBeInTheDocument();
     expect(screen.getByLabelText("Salary")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Save employee" })).toBeInTheDocument();
+  });
+
+  it("uses controlled country and currency options in the employee form", async () => {
+    render(<SalaryCommandCenter />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Add employee" }));
+
+    const dialog = await screen.findByRole("dialog", { name: "Employee form" });
+    const form = within(dialog);
+
+    expect(form.getByRole("combobox", { name: "Country" })).toBeInTheDocument();
+    expect(form.getByRole("combobox", { name: "Currency" })).toBeInTheDocument();
+
+    fireEvent.change(form.getByRole("combobox", { name: "Country" }), { target: { value: "India" } });
+
+    expect(form.getByRole("combobox", { name: "Currency" })).toHaveValue("INR");
   });
 
   it("shows API validation errors inside the employee form", async () => {

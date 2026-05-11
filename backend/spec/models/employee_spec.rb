@@ -45,4 +45,21 @@ RSpec.describe Employee, type: :model do
 
     expect(employee.currency).to eq("USD")
   end
+
+  it "only accepts supported countries and currencies" do
+    employee.country = "Atlantis"
+    employee.currency = "XYZ"
+
+    expect(employee).not_to be_valid
+    expect(employee.errors[:country]).to include("is not included in the list")
+    expect(employee.errors[:currency]).to include("is not included in the list")
+  end
+
+  it "requires currency to match the selected country" do
+    employee.country = "India"
+    employee.currency = "USD"
+
+    expect(employee).not_to be_valid
+    expect(employee.errors[:currency]).to include("must match the selected country")
+  end
 end
